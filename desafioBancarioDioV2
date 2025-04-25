@@ -1,0 +1,150 @@
+from datetime import date, datetime
+
+menu = """
+    [d] Depositar
+    [s] Sacar
+    [e] Extrato
+    [nu] Novo Usuario
+    [nc] Nova conta
+    [lc] listar contas
+    [q] Sair
+
+    opção: 
+"""
+
+
+
+def deposito(valor, saldo, extrato):
+
+        if (valor > 0):
+            saldo += valor
+            extrato += f"Depósito: R$ {valor:.2f} horario {datetime.now()}\n"
+        else:
+              print(f"Por favor insira um saldo maior que 0")
+
+        print(f"Seu saldo é: {saldo}")
+        return saldo, extrato
+
+def saque(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
+
+    if valor > saldo:
+        print(f"Saldo insuficiente")
+
+    elif valor > limite:
+        print(f"O valor excede o limite.")
+
+    elif numero_saques >= limite_saques:
+        print("Número de saques excedido")
+
+    elif valor <= saldo:
+        saldo -= valor
+        extrato += f"Saque R$ {valor:.2f} horário {datetime.now()}\n"
+        numero_saques += 1
+        print(f"Saque de {valor} realizado, Seu novo saldo é: {saldo}")
+        print(datetime.now())
+
+    else:
+        print("Saldo indiponivel")
+
+    return saldo, extrato, numero_saques
+
+def exibir_extrato(saldo, /, *, extrato):
+    print("\n####Extrato####")
+    print("Não foram realizadas movimentações" if not extrato else extrato)
+    print(f"Saldo: R$: {saldo:.2f}")
+
+def criar_usuario(usuarios):
+    cpf = input("Informe o CPF: (somente números: )")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("Já existe usuário com esse CPF!")
+        return
+    
+    nome = input("Informe o nome completo: ")
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaa): ")
+    endereco = input("Informe o endereço (logradouro, numero, bairro , cidade/estado:): ")
+
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+
+    print("Usuario criado co sucesso!")
+
+def filtrar_usuario(cpf, usuarios):
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+def criar_conta(agencia, numero_conta, usuarios):
+    cpf = input("Informe o CPF do usuario: ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("\nConta criada com sucesso!")
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+    
+    print("Usuario não encontrato!")
+
+def listar_contas(contas):
+    for conta in contas:
+        linha = f"""
+            Agência: {conta['agencia']}
+            C/C : {conta['numero_conta']}
+            Titular: {conta['usuario']['nome']}
+        """
+        print(linha)
+
+
+def main():
+    LIMITE_SAQUES = 3
+    AGENCIA = "0001"
+
+    saldo = 0
+    extrato = ""
+    limite = 500
+    numero_saques = 0
+    usuarios = []
+    contas = []
+
+    while True:
+
+        opcao = input(menu).lower()
+
+        match opcao:
+            case "d":
+                valor = float(input("Digite um valor para deposito: "))
+                saldo, extrato = deposito(valor, saldo, extrato)
+            case "s":
+                valor = float(input("Digite um valor para saque: "))
+                saldo, extrato, numero_saques = saque(
+                    saldo=saldo, 
+                    valor=valor,                    
+                    extrato=extrato, 
+                    limite=limite, 
+                    numero_saques=numero_saques,
+                    limite_saques=LIMITE_SAQUES,
+                )
+                
+            case "e":
+                exibir_extrato(saldo, extrato = extrato)
+
+            case "nu":
+                criar_usuario(usuarios)
+
+            case "nc":
+                numero_conta = len(contas) + 1
+                conta = criar_conta(AGENCIA, numero_conta, usuarios)
+
+                if conta:
+                    contas.append(conta)
+
+            case "lc":
+                listar_contas(contas)
+
+            case "q":
+                print("Saindo")
+                return False
+            case _:
+                print("Opção Inválida")
+
+
+
+main()
